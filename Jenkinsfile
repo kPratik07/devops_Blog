@@ -8,21 +8,18 @@ pipeline {
             }
         }
 
-        stage('Test Stage') {
-           steps {
-                echo 'Starting Health Check Test...'
+       stage('Test Stage') {
+            steps {
                 sh '''
-                # Start test container
                 docker run -d --name test-container -p 3001:80 frontend-app
-                sleep 5
-                
-                # Use the Docker Host IP (172.17.0.1) instead of localhost
-                curl -f http://172.17.0.1:3001 || (docker stop test-container && docker rm test-container && exit 1)
-                
-                # Cleanup
-                docker stop test-container && docker rm test-container
+                sleep 10
+                curl -sS http://172.17.0.1:3001 || exit 1
                 '''
-                echo 'Test Passed Successfully!'
+            }
+            post {
+                always {
+                    sh 'docker stop test-container && docker rm test-container || true'
+                }
             }
         }
 
